@@ -58,7 +58,7 @@ const CartItem = new Schema({
     userId: { type: ObjectId, ref: "user" },
 });
 
-const OrderByUser = new Schema({
+const Order = new Schema({
     userId: { type: ObjectId, ref: "user" },
     restaurantId: { type: ObjectId, ref: "restaurant" },
     orderedTime: Date,
@@ -68,7 +68,7 @@ const OrderByUser = new Schema({
 const OrderedItem = new Schema({
     dish: { type: ObjectId, ref: "dish" },
     quantity: Number,
-    orderId: { type: ObjectId, ref: "orderByUser" },
+    orderId: { type: ObjectId, ref: "order" },
 });
 
 const superAdmin = mongoose.model("superAdmin", SuperAdmin);
@@ -79,7 +79,7 @@ const worker = mongoose.model("worker", Worker);
 const dish = mongoose.model("dish", Dish);
 const user = mongoose.model("user", User);
 const cartItem = mongoose.model("cartItem", CartItem);
-const orderByUser = mongoose.model("orderByUser", OrderByUser);
+const order = mongoose.model("order", Order);
 const orderedItem = mongoose.model("OrderedItem", OrderedItem);
 
 module.exports = {
@@ -91,6 +91,6 @@ module.exports = {
     dish: dish,
     user: user,
     cartItem: cartItem,
-    orderByUser: orderByUser,
+    order: order,
     orderedItem: orderedItem,
 };
