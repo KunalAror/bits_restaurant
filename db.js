@@ -26,7 +26,7 @@ const OwnerAdmin = new Schema({
 const RestaurantOwnedBy = new Schema({
     // this allows 1 restaurants to have many owners and 1 owner to own many restaurants
     restaurantId: { type: ObjectId, ref: "restaurant" },
-    OwnerAdminId: { type: ObjectId, ref: "ownerAdmin" },
+    ownerAdminId: { type: ObjectId, ref: "ownerAdmin" },
 });
 
 const Worker = new Schema({
