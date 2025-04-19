@@ -47,10 +47,6 @@ ownerAdminRouter.get("/restaurants", ownerAdminMiddleware, async (req, res) => {
         restaurantOwned: restaurantsInfo,
     });
 });
-async function authenticateAdmin(ownerId, restaurantId) {
-    const userExist = await restaurantOwnedBy.exists({ ownerAdminId: ownerId, restaurantId: restaurantId });
-    return userExist;
-}
 
 ownerAdminRouter.post("/addWorker", ownerAdminMiddleware, async (req, res) => {
     const ownerId = req.userId;
@@ -165,7 +161,10 @@ ownerAdminRouter.get("/dishes", ownerAdminMiddleware, async (req, res) => {
         });
     }
 });
-
+async function authenticateAdmin(ownerId, restaurantId) {
+    const userExist = await restaurantOwnedBy.exists({ ownerAdminId: ownerId, restaurantId: restaurantId });
+    return userExist;
+}
 module.exports = {
     ownerAdminRouter: ownerAdminRouter,
 };
