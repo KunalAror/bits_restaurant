@@ -19,7 +19,7 @@ ownerAdminRouter.post("/signin", async (req, res) => {
         const accessToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET_OWNER_ADMIN, { expiresIn: "10m" });
         const refreshToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET_OWNER_ADMIN, { expiresIn: "7d" });
         try {
-            await ownerAdmin.updateOne({ email: email }, { $set: { refreshToken: refreshToken } });
+            user = await ownerAdmin.findOneAndUpdate({ email: email }, { $set: { refreshToken: refreshToken } }, { new: true });
             res.status(200).json({
                 message: "login succesful",
                 accessToken: accessToken,

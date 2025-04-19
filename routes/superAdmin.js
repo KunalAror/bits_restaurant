@@ -19,7 +19,7 @@ superAdminRouter.post("/signin", async (req, res) => {
         const accessToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET_SUPER_ADMIN, { expiresIn: "10m" });
         const refreshToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET_SUPER_ADMIN, { expiresIn: "7d" });
         try {
-            await superAdmin.updateOne({ email: email }, { $set: { refreshToken: refreshToken } });
+            user = await superAdmin.findOneAndUpdate({ email: email }, { $set: { refreshToken: refreshToken } }, { new: true });
             res.status(200).json({
                 message: "login succesful",
                 accessToken: accessToken,
