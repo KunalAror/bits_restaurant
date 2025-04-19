@@ -11,6 +11,7 @@ superAdminRouter.post("/signin", async (req, res) => {
     let { email, password } = req.body;
 
     const user = await superAdmin.findOne({ email: email });
+
     const hashedPassword = user.password;
     let userFound = await bcrypt.compare(password, hashedPassword);
 
@@ -19,19 +20,18 @@ superAdminRouter.post("/signin", async (req, res) => {
         const refreshToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET_SUPER_ADMIN, { expiresIn: "7d" });
         try {
             await superAdmin.updateOne({ email: email }, { $set: { refreshToken: refreshToken } });
+            res.status(200).json({
+                message: "login succesful",
+                accessToken: accessToken,
+                refreshToken: refreshToken,
+                superAdminDetails: user,
+            });
         } catch (e) {
             res.json({
                 message: "failed login",
                 error: e,
             });
-            return;
         }
-
-        res.json({
-            message: "login succesful",
-            accessToken: accessToken,
-            refreshToken: refreshToken,
-        });
     }
 });
 
