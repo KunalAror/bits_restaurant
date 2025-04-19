@@ -10,7 +10,7 @@ const workerRouter = Router();
 workerRouter.post("/signin", async (req, res) => {
     let { email, password } = req.body;
 
-    const user = await worker.findOne({ email: email });
+    let user = await worker.findOne({ email: email });
 
     const hashedPassword = user.password;
     let userFound = await bcrypt.compare(password, hashedPassword);
@@ -19,7 +19,7 @@ workerRouter.post("/signin", async (req, res) => {
         const accessToken = jwt.sign(
             {
                 userId: user._id,
-                userRestaurant: user.restaurantId,
+                restaurantId: user.restaurantId,
             },
             process.env.JWT_SECRET_WORKER,
             { expiresIn: "10m" }
@@ -28,7 +28,7 @@ workerRouter.post("/signin", async (req, res) => {
         const refreshToken = jwt.sign(
             {
                 userId: user._id,
-                userRestaurant: user.restaurantId,
+                restaurantId: user.restaurantId,
             },
             process.env.JWT_SECRET_WORKER,
             { expiresIn: "7d" }
@@ -55,6 +55,7 @@ workerRouter.post("/signin", async (req, res) => {
 workerRouter.put("/toggleRestaurantStatus", workerMiddleware, async (req, res) => {
     const userId = req.userId;
     const restaurantId = req.restaurantId;
+    console.log(restaurantId);
 
     try {
         const restaurantUpdated = await restaurant.findOneAndUpdate({ _id: restaurantId }, [{ $set: { open: { $not: "$open" } } }], { new: true });
