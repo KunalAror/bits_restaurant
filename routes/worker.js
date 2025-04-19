@@ -55,7 +55,6 @@ workerRouter.post("/signin", async (req, res) => {
 workerRouter.put("/toggleRestaurantStatus", workerMiddleware, async (req, res) => {
     const userId = req.userId;
     const restaurantId = req.restaurantId;
-    console.log(restaurantId);
 
     try {
         const restaurantUpdated = await restaurant.findOneAndUpdate({ _id: restaurantId }, [{ $set: { open: { $not: "$open" } } }], { new: true });
