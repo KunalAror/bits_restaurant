@@ -1,6 +1,6 @@
 require("dotenv").config();
 const { Router } = require("express");
-const { ownerAdmin, restaurantOwnedBy } = require("../db");
+const { ownerAdmin, restaurantOwnedBy, worker } = require("../db");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { ownerAdminMiddleware } = require("../middleware/ownerAdmin");
@@ -46,6 +46,34 @@ ownerAdminRouter.get("/restaurants", ownerAdminMiddleware, async (req, res) => {
     res.json({
         restaurantOwned: restaurantsInfo,
     });
+});
+
+ownerAdminRouter.post("/addWorker", ownerAdminMiddleware, async (req, res) => {
+    const userId = req.userId;
+
+    const { restaurantId, email, password, firstName, lastName } = req.body;
+
+    try {
+        const hashedPassword = await bcrypt.hash(password, 5);
+
+        const workerMade = await worker.create({
+            email: email,
+            password: hashedPassword,
+            firstName: firstName,
+            lastName: lastName,
+            restaurantId: restaurantId,
+            refreshToken: "will be set once worker logs in",
+        });
+
+        res.json({
+            message: `created worker ${workerMade.firstName}`,
+        });
+    } catch (e) {
+        res.json({
+            message: "failed, try again",
+            error: e,
+        });
+    }
 });
 
 module.exports = {
