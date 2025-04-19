@@ -59,11 +59,13 @@ const User = new Schema({
 });
 
 const CartItem = new Schema({
-    dish: { type: ObjectId, ref: "dish" },
+    dishId: { type: ObjectId, ref: "dish" },
     quantity: Number,
     userId: { type: ObjectId, ref: "user" },
 });
 
+//this schema allows people to orders from multiple restaurants at once from the cart In the db they go in as seperate orders
+//so you can place multiple orders at once from multiple restaurants from 1 cart
 const Order = new Schema({
     userId: { type: ObjectId, ref: "user" },
     restaurantId: { type: ObjectId, ref: "restaurant" },
