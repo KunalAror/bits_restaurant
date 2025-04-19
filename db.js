@@ -8,6 +8,7 @@ const SuperAdmin = new Schema({
     password: String,
     firstName: String,
     lastName: String,
+    refreshToken: String,
 });
 
 const Restaurant = new Schema({
@@ -21,6 +22,7 @@ const OwnerAdmin = new Schema({
     password: String,
     firstName: String,
     lastName: String,
+    refreshToken: String,
 });
 
 const RestaurantOwnedBy = new Schema({
@@ -35,6 +37,7 @@ const Worker = new Schema({
     firstName: String,
     lastName: String,
     restaurantId: { type: ObjectId, ref: "restaurant" },
+    refreshToken: String,
 });
 
 const Dish = new Schema({
@@ -50,6 +53,7 @@ const User = new Schema({
     password: String,
     firstName: String,
     lastName: String,
+    refreshToken: String,
 });
 
 const CartItem = new Schema({
