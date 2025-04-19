@@ -37,7 +37,7 @@ superAdminRouter.post("/signin", async (req, res) => {
 
 superAdminRouter.post("/addRestaurant", superAdminMiddleware, async (req, res) => {
     const { title, logoUrl, email, password, firstName, lastName } = req.body;
-
+    // need to change for 1 owner multiple restaurants and
     try {
         const restaurantMade = await restaurant.create({
             title: title,
@@ -66,7 +66,7 @@ superAdminRouter.post("/addRestaurant", superAdminMiddleware, async (req, res) =
         });
     }
 });
-
+// need to add route of add owner to 1 rest so that there can be multiple owners
 module.exports = {
     superAdminRouter: superAdminRouter,
 };

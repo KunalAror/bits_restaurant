@@ -1,6 +1,6 @@
 require("dotenv").config();
 const { Router } = require("express");
-const { ownerAdmin, restaurantOwnedBy, worker } = require("../db");
+const { ownerAdmin, restaurantOwnedBy, worker, dish } = require("../db");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { ownerAdminMiddleware } = require("../middleware/ownerAdmin");
@@ -47,31 +47,121 @@ ownerAdminRouter.get("/restaurants", ownerAdminMiddleware, async (req, res) => {
         restaurantOwned: restaurantsInfo,
     });
 });
+async function authenticateAdmin(ownerId, restaurantId) {
+    const userExist = await restaurantOwnedBy.exists({ ownerAdminId: ownerId, restaurantId: restaurantId });
+    return userExist;
+}
 
 ownerAdminRouter.post("/addWorker", ownerAdminMiddleware, async (req, res) => {
-    const userId = req.userId;
+    const ownerId = req.userId;
 
     const { restaurantId, email, password, firstName, lastName } = req.body;
+    const userExist = authenticateAdmin(ownerId, restaurantId);
+    if (userExist) {
+        try {
+            const hashedPassword = await bcrypt.hash(password, 5);
 
-    try {
-        const hashedPassword = await bcrypt.hash(password, 5);
+            const workerMade = await worker.create({
+                email: email,
+                password: hashedPassword,
+                firstName: firstName,
+                lastName: lastName,
+                restaurantId: restaurantId,
+                refreshToken: "will be set once worker logs in",
+            });
 
-        const workerMade = await worker.create({
-            email: email,
-            password: hashedPassword,
-            firstName: firstName,
-            lastName: lastName,
-            restaurantId: restaurantId,
-            refreshToken: "will be set once worker logs in",
+            res.json({
+                message: "created worker",
+                workerInfo: workerMade,
+            });
+        } catch (e) {
+            res.json({
+                message: "failed, try again",
+                error: e,
+            });
+        }
+    } else {
+        res.status(401).json({
+            message: "You are not authorized",
         });
+    }
+});
 
-        res.json({
-            message: `created worker ${workerMade.firstName}`,
+ownerAdminRouter.post("/addDish", ownerAdminMiddleware, async (req, res) => {
+    const userId = req.userId;
+
+    const { restaurantId, title, price, description } = req.body;
+    const userExist = authenticateAdmin(ownerId, restaurantId);
+    if (userExist) {
+        try {
+            const dishMade = await dish.create({
+                title: title,
+                price: price,
+                description: description,
+                available: false,
+                restaurantId: restaurantId,
+            });
+            res.json({
+                message: "created dish",
+                dishInfo: dishMade,
+            });
+        } catch (e) {
+            res.json({
+                message: "try again",
+                error: e,
+            });
+        }
+    } else {
+        res.status(401).json({
+            message: "You are not authorized",
         });
-    } catch (e) {
-        res.json({
-            message: "failed, try again",
-            error: e,
+    }
+});
+
+ownerAdminRouter.get("/workers", ownerAdminMiddleware, async (req, res) => {
+    const userId = req.userId;
+    const { restaurantId } = req.body;
+    const userExist = authenticateAdmin(userId, restaurantId);
+    if (userExist) {
+        try {
+            const workers = await worker.find({ restaurantId: restaurantId });
+            res.json({
+                message: "here are your workers",
+                workers: workers,
+            });
+        } catch (e) {
+            res.json({
+                message: "try again",
+                error: e,
+            });
+        }
+    } else {
+        res.status(401).json({
+            message: "You are not authorized",
+        });
+    }
+});
+
+ownerAdminRouter.get("/dishes", ownerAdminMiddleware, async (req, res) => {
+    const userId = req.userId;
+    const { restaurantId } = req.body;
+    const userExist = authenticateAdmin(userId, restaurantId);
+    if (userExist) {
+        try {
+            const dishes = await dish.find({ restaurantId: restaurantId });
+            res.json({
+                message: "here are your dishes",
+                dishes: dishes,
+            });
+        } catch (e) {
+            res.json({
+                message: "try again",
+                error: e,
+            });
+        }
+    } else {
+        res.status(401).json({
+            message: "You are not authorized",
         });
     }
 });
