@@ -32,7 +32,7 @@ const RestaurantOwnedBy = new Schema({
 });
 
 const Worker = new Schema({
-    email: String,
+    email: { type: String, unique: true },
     password: String,
     firstName: String,
     lastName: String,
@@ -47,6 +47,8 @@ const Dish = new Schema({
     available: Boolean,
     restaurantId: { type: ObjectId, ref: "restaurant" },
 });
+
+Dish.index({ title: 1, restaurantId: 1 }, { unique: true });
 
 const User = new Schema({
     email: { type: String, unique: true },

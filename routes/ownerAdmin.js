@@ -86,7 +86,7 @@ ownerAdminRouter.post("/addDish", ownerAdminMiddleware, async (req, res) => {
     const userId = req.userId;
 
     const { restaurantId, title, price, description } = req.body;
-    const userExist = authenticateAdmin(ownerId, restaurantId);
+    const userExist = authenticateAdmin(userId, restaurantId);
     if (userExist) {
         try {
             const dishMade = await dish.create({

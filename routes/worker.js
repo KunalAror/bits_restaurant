@@ -1,6 +1,6 @@
 require("dotenv").config();
 const { Router } = require("express");
-const { worker, restaurant } = require("../db");
+const { worker, restaurant, dish, order, orderedItem } = require("../db");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { workerMiddleware } = require("../middleware/woker");
@@ -16,8 +16,24 @@ workerRouter.post("/signin", async (req, res) => {
     let userFound = await bcrypt.compare(password, hashedPassword);
 
     if (userFound) {
-        const accessToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET_WORKER, { expiresIn: "10m" });
-        const refreshToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET_WORKER, { expiresIn: "7d" });
+        const accessToken = jwt.sign(
+            {
+                userId: user._id,
+                userRestaurant: user.restaurantId,
+            },
+            process.env.JWT_SECRET_WORKER,
+            { expiresIn: "10m" }
+        );
+
+        const refreshToken = jwt.sign(
+            {
+                userId: user._id,
+                userRestaurant: user.restaurantId,
+            },
+            process.env.JWT_SECRET_WORKER,
+            { expiresIn: "7d" }
+        );
+
         try {
             const workerLoggedIn = await worker.findOneAndUpdate({ email: email }, { $set: { refreshToken: refreshToken } }).populate("restaurantId");
             res.status(200).json({
@@ -38,36 +54,88 @@ workerRouter.post("/signin", async (req, res) => {
 
 workerRouter.put("/toggleRestaurantStatus", workerMiddleware, async (req, res) => {
     const userId = req.userId;
+    const restaurantId = req.restaurantId;
 
-    const { restaurantId } = req.body;
+    try {
+        const restaurantUpdated = await restaurant.findOneAndUpdate({ _id: restaurantId }, [{ $set: { open: { $not: "$open" } } }], { new: true });
 
-    const userExist = authenticateWorker(userId, restaurantId);
-
-    if (userExist) {
-        try {
-            const restaurantUpdated = await restaurant.findOneAndUpdate({ _id: restaurantId }, [{ $set: { open: { $not: "$open" } } }], { new: true });
-
-            res.json({
-                message: "updated status",
-                restaurantStatus: restaurantUpdated.open,
-            });
-        } catch (e) {
-            res.json({
-                message: "try again",
-                error: e,
-            });
-        }
-    } else {
-        res.status(401).json({
-            message: "Unauthorized",
+        res.json({
+            message: "updated status",
+            restaurantStatus: restaurantUpdated.open,
+        });
+    } catch (e) {
+        res.json({
+            message: "Sorry Try again",
+            error: e,
         });
     }
 });
 
-async function authenticateWorker(workerId, restaurantId) {
-    const userExist = await worker.exists({ _id: workerId, restaurantId: restaurantId });
-    return userExist;
-}
+workerRouter.put("/toggleDishStatus", workerMiddleware, async (req, res) => {
+    const userId = req.userId;
+    const restaurantId = req.restaurantId;
+
+    const { dishId } = req.body;
+
+    try {
+        const dishUpdated = await dish.findOneAndUpdate({ _id: dishId }, [{ $set: { available: { $not: "$available" } } }], {
+            new: true,
+        });
+        if (dishUpdated) {
+            res.json({
+                message: "updated status",
+                dishUpdatedStatus: dishUpdated.available,
+            });
+        } else {
+            res.json({
+                message: "dish doesn't exist",
+            });
+        }
+    } catch (e) {
+        res.json({
+            message: "Sorry Try again",
+            error: e,
+        });
+    }
+});
+
+workerRouter.get("/ordersPending", workerMiddleware, async (req, res) => {
+    const userId = req.userId;
+    const restaurantId = req.restaurantId;
+
+    const ordersPending = await order.find({ restaurantId: restaurantId, ready: false });
+    res.json({
+        ordersPending: ordersPending,
+    });
+});
+
+workerRouter.get("/order/:orderId", workerMiddleware, async (req, res) => {
+    const userId = req.userId;
+    const restaurantId = req.restaurantId;
+
+    const orderId = req.params.orderId;
+
+    const orderInfo = await orderedItem.find({ orderId: orderId });
+
+    res.json({
+        orderInfo: orderInfo,
+    });
+});
+
+workerRouter.put("/orderReady", workerMiddleware, async (req, res) => {
+    const userId = req.userId;
+    const restaurantId = req.restaurantId;
+
+    const orderId = req.orderId;
+
+    const orderReadied = await order.findOneAndUpdate({ _id: orderId }, { $set: { ready: true } }, { new: true });
+
+    res.json({
+        orderReadied: orderReadied,
+    });
+    // need to add the logic for sockets so that user gets notification
+});
+
 module.exports = {
     workerRouter: workerRouter,
 };

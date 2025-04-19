@@ -10,10 +10,11 @@ function workerMiddleware(req, res, next) {
         const decoded = jwt.verify(token, process.env.JWT_SECRET_WORKER);
         if (decoded) {
             req.userId = decoded.userId;
+            req.restaurantId = decoded.restaurantId;
             next();
         } else {
-            res.json({
-                message: "incorrect credentials",
+            res.status(401).json({
+                message: "You are not authorized",
             });
         }
     } else {
